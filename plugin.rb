@@ -20,8 +20,9 @@ after_initialize do
 		class QplumApiController < ::ApplicationController
 			include CurrentUser
 
-			API_KEY = "84cb9c40c0cf8c01"
-			API_SECRET = "b2ed129e30666338f1860779a568c18863c7a005afbaa0da018cd37a07adcf96"
+			API_KEY = SiteSetting.qplum_api_key
+			API_SECRET = SiteSetting.qplum_api_secret
+			API_BASE_PATH = SiteSetting.qplum_api_base_path
 
 			def get_score
 				if current_user.nil?
@@ -29,7 +30,7 @@ after_initialize do
 					return 
 				else 	
 					external_id = current_user.single_sign_on_record.external_id
-					url = "http://www.qplum.dev:3001/users/#{external_id}/score.json"
+					url = "#{API_BASE_PATH}users/#{external_id}/score.json"
 					uri = URI.parse(url)
 					auth_params = add_authentication_params({}, true)
 					uri.query = URI.encode_www_form(auth_params)
@@ -68,5 +69,3 @@ after_initialize do
 		mount ::QplumApiPlugin::Engine, at: '/qplum_api'
 	end
 end
-
-

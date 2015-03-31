@@ -1,0 +1,10 @@
+qplum_api:
+  qplum_api_key:
+    client: ''
+    default: ''
+  qplum_api_secret:
+    client: ''
+    default: ''
+  qplum_api_base_path:
+    client: ''
+    default: ''
