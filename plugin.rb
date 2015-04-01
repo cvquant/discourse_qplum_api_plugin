@@ -31,31 +31,40 @@ after_initialize do
 				else 	
 					external_id = current_user.single_sign_on_record.external_id
 					url = "#{API_BASE_PATH}users/#{external_id}/score.json"
-					uri = URI.parse(url)
-					auth_params = add_authentication_params({}, true)
-					uri.query = URI.encode_www_form(auth_params)
-					response = Net::HTTP.get_response(uri)
+					response = create_and_execute_get_request(url, {}, true)					
 					respond_to do |format|				        
 				        format.json { render json: response.body }
 				    end
 				end
 			end
 
-			def add_authentication_params(params, add_access_token)
-				timestamp = Time.now.to_i
-				auth_params = params
-				auth_params["timestamp"] = timestamp
-				auth_params["sign"] = JWT.encode(auth_params, API_SECRET)
-				auth_params["api_key"] = API_KEY
+			def add_authentication_headers(request, add_access_token)
+				timestamp = Time.now				
+				expires_at = timestamp + 30.minutes
+				auth_params = {exp: expires_at.to_i, timestamp: timestamp}								
+				sign = JWT.encode(auth_params, API_SECRET)
+				api_key = API_KEY				
+				request.add_field("X-qplum_sign", sign)
+				request.add_field("X-qplum_api_key", api_key)
 				if add_access_token
 					if current_user.nil?
 						render status: :forbidden, json: :false
 						return
-					else
-						auth_params["access_token"] = current_user.custom_fields["token"]
+					else						
+						request.add_field("Authorization", current_user.custom_fields["token"])
 					end
 				end
-				return auth_params
+				return request
+			end
+
+			def create_and_execute_get_request(url, params, add_access_token)
+				uri = URI.parse(url)
+				uri.query = URI.encode_www_form(params)
+				http = Net::HTTP.new(uri.host, uri.port)
+				request = Net::HTTP::Get.new(uri.request_uri)
+				request = add_authentication_headers(request, add_access_token)
+				response = http.request(request)
+				return response
 			end
 		end
 	end

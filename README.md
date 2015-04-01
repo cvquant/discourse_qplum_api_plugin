@@ -22,3 +22,5 @@ cd /var/docker
 git pull
 ./launcher rebuild app
 
+## Changelog
+API Keys can now be added by admin through site settings 
