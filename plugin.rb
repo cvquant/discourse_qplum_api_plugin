@@ -41,7 +41,8 @@ after_initialize do
 			def add_authentication_headers(request, add_access_token)
 				timestamp = Time.now				
 				expires_at = timestamp + 30.minutes
-				auth_params = {exp: expires_at.to_i, timestamp: timestamp}								
+				nonce = SecureRandom.hex(32)
+				auth_params = {exp: expires_at.to_i, timestamp: timestamp, nonce: nonce}								
 				sign = JWT.encode(auth_params, API_SECRET)
 				api_key = API_KEY				
 				request.add_field("X-qplum_sign", sign)
