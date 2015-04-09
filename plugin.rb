@@ -38,13 +38,31 @@ after_initialize do
 				end
 			end
 
+			def post_event
+				if current_user.nil?
+					render status: :forbidden, json: :false
+					return 
+				else
+					action = params[:user_action]
+					metadata = params[:metadata]
+					external_id = current_user.single_sign_on_record.external_id
+					url = "#{API_BASE_PATH}user_events/"
+					params = {user_action: action, metadata: metadata}
+					response = create_and_execute_post_request(url, params, true)					
+					respond_to do |format|				        
+				        format.json { render json: response.body }
+				    end
+				end
+			end
+
+
 			def add_authentication_headers(request, add_access_token)
 				timestamp = Time.now				
 				expires_at = timestamp + 30.minutes
 				nonce = SecureRandom.hex(32)
 				auth_params = {exp: expires_at.to_i, timestamp: timestamp, nonce: nonce}								
 				sign = JWT.encode(auth_params, API_SECRET)
-				api_key = API_KEY				
+				api_key = API_KEY
 				request.add_field("X-qplum_sign", sign)
 				request.add_field("X-qplum_api_key", api_key)
 				if add_access_token
@@ -67,11 +85,23 @@ after_initialize do
 				response = http.request(request)
 				return response
 			end
+
+			def create_and_execute_post_request(url, params, add_access_token)
+				uri = URI.parse(url)
+				uri.query = URI.encode_www_form(params)
+				http = Net::HTTP.new(uri.host, uri.port)
+				request = Net::HTTP::Post.new(uri.request_uri)
+				request = add_authentication_headers(request, add_access_token)
+				response = http.request(request)
+				return response
+			end
+
 		end
 	end
 
 	QplumApiPlugin::Engine.routes.draw do
 	    get '/score' => 'qplum_api#get_score'
+	    post '/event' => 'qplum_api#post_event'
 	    # post '/add' => 'qplum_api#add'
   	end
 
