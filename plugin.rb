@@ -23,47 +23,61 @@ after_initialize do
 		end
 
 		class QplumApiController < ::ApplicationController
-			include CurrentUser
+			include CurrentUser			
+
+			def get_score
+				response= Requestor.get_score(current_user)
+				unless response 
+					render status: :forbidden, json: :false
+				else
+					respond_to do |format|				        
+				        format.json { render json: response.body }
+				    end
+				end				
+			end
+
+			def post_event
+				response= Requestor.post_event(current_user, params[:user_action], params[:metadata])
+				unless response 
+					render status: :forbidden, json: :false
+				else
+					respond_to do |format|				        
+				        format.json { render json: response.body }
+				    end
+				end
+			end			
+		end
+
+		class Requestor 
 
 			API_KEY = SiteSetting.qplum_api_key
 			API_SECRET = SiteSetting.qplum_api_secret
 			API_BASE_PATH = SiteSetting.qplum_api_base_path
 
-			def get_score
+			def self.post_event(current_user, action, metadata)
 				if current_user.nil?
-					render status: :forbidden, json: :false
+					return 
+				else					
+					external_id = current_user.single_sign_on_record.external_id
+					url = "#{API_BASE_PATH}user_events/"
+					params = {user_action: action, metadata: metadata}
+					response = create_and_execute_post_request(current_user, url, params, true)
+					return response
+				end
+			end
+
+			def self.get_score(current_user)
+				if current_user.nil?					
 					return 
 				else 	
 					external_id = current_user.single_sign_on_record.external_id
 					url = "#{API_BASE_PATH}users/#{external_id}/score.json"
-					response = create_and_execute_get_request(url, {}, true)
-					res_body = response.body
-					score = JSON.parse(res_body)["score"]
-					respond_to do |format|
-				        format.json { render json: res_body }
-				    end
+					response = create_and_execute_get_request(current_user, url, {}, true)
+					return response
 				end
 			end
 
-			def post_event
-				if current_user.nil?
-					render status: :forbidden, json: :false
-					return 
-				else
-					action = params[:user_action]
-					metadata = params[:metadata]
-					external_id = current_user.single_sign_on_record.external_id
-					url = "#{API_BASE_PATH}user_events/"
-					params = {user_action: action, metadata: metadata}
-					response = create_and_execute_post_request(url, params, true)
-					respond_to do |format|				        
-				        format.json { render json: response.body }
-				    end
-				end
-			end
-
-
-			def add_authentication_headers(request, add_access_token)
+			def self.add_authentication_headers(current_user, request, add_access_token)
 				timestamp = Time.now				
 				expires_at = timestamp + 30.minutes
 				nonce = SecureRandom.hex(32)
@@ -83,26 +97,31 @@ after_initialize do
 				return request
 			end
 
-			def create_and_execute_get_request(url, params, add_access_token)
+			def self.create_and_execute_get_request(current_user, url, params, add_access_token)
 				uri = URI.parse(url)
 				uri.query = URI.encode_www_form(params)
 				http = Net::HTTP.new(uri.host, uri.port)
 				request = Net::HTTP::Get.new(uri.request_uri)
-				request = add_authentication_headers(request, add_access_token)
+				request = add_authentication_headers(current_user, request, add_access_token)
 				response = http.request(request)
 				return response
 			end
 
-			def create_and_execute_post_request(url, params, add_access_token)
+			def self.create_and_execute_post_request(current_user, url, params, add_access_token)
 				uri = URI.parse(url)
 				uri.query = URI.encode_www_form(params)
 				http = Net::HTTP.new(uri.host, uri.port)
 				request = Net::HTTP::Post.new(uri.request_uri)
-				request = add_authentication_headers(request, add_access_token)
+				request = add_authentication_headers(current_user, request, add_access_token)
 				response = http.request(request)
 				return response
 			end
+		end
+	end
 
+	UserBadge.class_eval do
+		after_create do 
+			QplumApiPlugin::Requestor.post_event(self.user, "badge-granted", {})
 		end
 	end
 
