@@ -4,12 +4,17 @@
 # authors: codeon
 
 register_asset "javascripts/score.js"
+register_asset "javascripts/discourse/templates/user-dropdown.js.handlebars"
 
 load File.expand_path("../qplum_api.rb", __FILE__)
 
 QplumApiPlugin = QplumApiPlugin
 
+DiscoursePluginRegistry.serialized_current_user_fields << "score"
+
 after_initialize do 
+
+	User.register_custom_field_type('score', :integer)
 
 	module QplumApiPlugin
 		class Engine < ::Rails::Engine
@@ -31,9 +36,12 @@ after_initialize do
 				else 	
 					external_id = current_user.single_sign_on_record.external_id
 					url = "#{API_BASE_PATH}users/#{external_id}/score.json"
-					response = create_and_execute_get_request(url, {}, true)					
-					respond_to do |format|				        
-				        format.json { render json: response.body }
+					response = create_and_execute_get_request(url, {}, true)
+					res_body = response.body
+					score = JSON.parse(res_body)["score"]
+					Rails.logger.debug "#{score}"					
+					respond_to do |format|
+				        format.json { render json: res_body }
 				    end
 				end
 			end
@@ -48,7 +56,7 @@ after_initialize do
 					external_id = current_user.single_sign_on_record.external_id
 					url = "#{API_BASE_PATH}user_events/"
 					params = {user_action: action, metadata: metadata}
-					response = create_and_execute_post_request(url, params, true)					
+					response = create_and_execute_post_request(url, params, true)
 					respond_to do |format|				        
 				        format.json { render json: response.body }
 				    end
@@ -60,7 +68,7 @@ after_initialize do
 				timestamp = Time.now				
 				expires_at = timestamp + 30.minutes
 				nonce = SecureRandom.hex(32)
-				auth_params = {exp: expires_at.to_i, timestamp: timestamp, nonce: nonce}								
+				auth_params = {exp: expires_at.to_i, timestamp: timestamp, nonce: nonce}
 				sign = JWT.encode(auth_params, API_SECRET)
 				api_key = API_KEY
 				request.add_field("X-qplum_sign", sign)
