@@ -3,18 +3,18 @@
 # version: 0.1
 # authors: codeon
 
-register_asset "javascripts/score.js"
 register_asset "javascripts/discourse/templates/user-dropdown.js.handlebars"
+register_asset "stylesheets/score.scss"
 
 load File.expand_path("../qplum_api.rb", __FILE__)
-
+ 
 QplumApiPlugin = QplumApiPlugin
 
-DiscoursePluginRegistry.serialized_current_user_fields << "score"
+DiscoursePluginRegistry.serialized_current_user_fields << "qplum_score"
 
 after_initialize do 
 
-	User.register_custom_field_type('score', :integer)
+	User.register_custom_field_type('qplum_score', :integer)
 
 	module QplumApiPlugin
 		class Engine < ::Rails::Engine
@@ -39,7 +39,6 @@ after_initialize do
 					response = create_and_execute_get_request(url, {}, true)
 					res_body = response.body
 					score = JSON.parse(res_body)["score"]
-					Rails.logger.debug "#{score}"					
 					respond_to do |format|
 				        format.json { render json: res_body }
 				    end

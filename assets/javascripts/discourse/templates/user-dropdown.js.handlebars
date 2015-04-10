@@ -8,7 +8,7 @@
     </li>
     <li>{{#link-to 'userActivity.bookmarks' currentUser}}{{i18n 'user.bookmarks'}}{{/link-to}}</li>    
     <li>{{#link-to 'preferences' currentUser}}{{i18n 'user.preferences'}}{{/link-to}}</li>
-    <li>{{#link-to 'preferences' currentUser}}Score - {{currentUser.score}}{{/link-to}}</li>
+    <li><span class='qplum-score'>Score - {{currentUser.score}}</span></li>
     <li><button {{action "logout"}} class='btn btn-danger right logout'><i class='fa fa-sign-out'></i>{{i18n 'user.log_out'}}</button></li>
   </ul>
 </section>
