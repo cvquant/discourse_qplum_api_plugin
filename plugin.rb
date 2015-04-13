@@ -119,9 +119,11 @@ after_initialize do
 		end
 	end
 
-	UserBadge.class_eval do
+	Notification.class_eval do
 		after_create do 
-			QplumApiPlugin::Requestor.post_event(self.user, "badge-granted", {})
+			if self.notification_type == Notification.types[:granted_badge]
+				QplumApiPlugin::Requestor.post_event(self.user, "badge-granted", {})
+			end
 		end
 	end
 
