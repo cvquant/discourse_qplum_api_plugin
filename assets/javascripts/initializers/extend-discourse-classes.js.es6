@@ -17,9 +17,11 @@ export default {
           user.set('score', score);
       });
       Discourse.ajax("/qplum_api/score", {
-        dataType: 'json',
-        type: 'GET'
-      });
+          dataType: 'json',
+          type: 'GET'
+        }).then(function(json) {
+          user.set('score', json['score']);
+        });
     }
   }
 };
