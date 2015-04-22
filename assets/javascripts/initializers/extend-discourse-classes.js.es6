@@ -8,19 +8,18 @@ export default {
         return Discourse.ajax("/qplum_api/score", {
           dataType: 'json',
           type: 'GET'
-        }).then(function(json) {
-          thisClass.set('score', json['score']);
         });
       }
     });    
     var user = Discourse.User.current();
     if (user != null){
+      Discourse.MessageBus.subscribe("/qplum_score/"+user.id, function(score) {
+          user.set('score', score);
+      });
       Discourse.ajax("/qplum_api/score", {
-          dataType: 'json',
-          type: 'GET'
-        }).then(function(json) {
-          user.set('score', json['score']);
-        });
+        dataType: 'json',
+        type: 'GET'
+      });
     }
   }
 };

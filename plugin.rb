@@ -73,6 +73,13 @@ after_initialize do
 					external_id = current_user.single_sign_on_record.external_id
 					url = "#{API_BASE_PATH}users/#{external_id}/score.json"
 					response = create_and_execute_get_request(current_user, url, {}, true)
+					if response.body 
+						body = JSON.parse(response.body)
+						Rails.logger.info "Response body is #{body}\n\n"
+						score = body["score"]
+						Rails.logger.info "Publishing score #{score} to users score\n\n"
+						MessageBus.publish("/qplum_score/#{current_user.id}", score)
+					end
 					return response
 				end
 			end
@@ -122,7 +129,14 @@ after_initialize do
 	Notification.class_eval do
 		after_create do 
 			if self.notification_type == Notification.types[:granted_badge]
-				QplumApiPlugin::Requestor.post_event(self.user, "badge-granted", {})
+				response = QplumApiPlugin::Requestor.post_event(self.user, "badge-granted", {})
+				if response && response.body 
+					body = JSON.parse(response.body)
+					if body && body.has_key?("score")
+						Rails.logger.info "After badge-granted , new score is #{body['score']}"						
+						MessageBus.publish("/qplum_score/#{self.user.id}", body["score"])
+					end
+				end
 			end
 		end
 	end
