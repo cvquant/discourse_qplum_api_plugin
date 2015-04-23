@@ -108,6 +108,15 @@ after_initialize do
 				uri = URI.parse(url)
 				uri.query = URI.encode_www_form(params)
 				http = Net::HTTP.new(uri.host, uri.port)
+				if uri.scheme == "https"
+					http.use_ssl = true
+					if uri.host == "staging.qplum.co"
+						http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+					else
+						http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+						http.ca_path = '/etc/ssl/certs'
+					end
+				end
 				request = Net::HTTP::Get.new(uri.request_uri)
 				request = add_authentication_headers(current_user, request, add_access_token)
 				response = http.request(request)
@@ -118,6 +127,15 @@ after_initialize do
 				uri = URI.parse(url)
 				uri.query = URI.encode_www_form(params)
 				http = Net::HTTP.new(uri.host, uri.port)
+				if uri.scheme == "https"
+					http.use_ssl = true
+					if uri.host == "staging.qplum.co"
+						http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+					else
+						http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+						http.ca_path = '/etc/ssl/certs'
+					end
+				end
 				request = Net::HTTP::Post.new(uri.request_uri)
 				request = add_authentication_headers(current_user, request, add_access_token)
 				response = http.request(request)
