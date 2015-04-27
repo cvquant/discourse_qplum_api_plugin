@@ -153,13 +153,22 @@ after_initialize do
 				if badge_id
 					badge = Badge.includes(:badge_type).find(badge_id)
 					type = badge.badge_type.name
-				end
-				response = QplumApiPlugin::Requestor.post_event(self.user, "badge-granted", {"badge_id" => badge_id, "badge_name" => badge_name, "badge_type" => type})
-				if response && response.body 
-					body = JSON.parse(response.body)
-					if body && body.has_key?("score")
-						Rails.logger.debug "After badge-granted , new score is #{body['score']}"
-						MessageBus.publish("/qplum_score/#{self.user.id}", body["score"])
+					response = QplumApiPlugin::Requestor.post_event(self.user, 
+						"badge-granted", 
+						{
+							"badge_id" => badge_id, 
+							"badge_name" => badge_name, 
+							"badge_type" => type, 
+							"notif_id" => self.id,
+							"multiple" => badge.multiple_grant
+						}
+					)
+					if response && response.body 
+						body = JSON.parse(response.body)
+						if body && body.has_key?("score")
+							Rails.logger.debug "After badge-granted , new score is #{body['score']}"
+							MessageBus.publish("/qplum_score/#{self.user.id}", body["score"])
+						end
 					end
 				end
 			end
