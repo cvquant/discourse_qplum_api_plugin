@@ -60,7 +60,7 @@ after_initialize do
 				else					
 					external_id = current_user.single_sign_on_record.external_id
 					url = "#{API_BASE_PATH}user_events/"
-					params = {user_action: action, metadata: metadata}
+					params = {user_action: action, metadata: metadata.to_json}
 					response = create_and_execute_post_request(current_user, url, params, true)
 					return response
 				end
@@ -77,7 +77,7 @@ after_initialize do
 						body = JSON.parse(response.body)
 						Rails.logger.info "Response body is #{body}\n\n"
 						score = body["score"]
-						Rails.logger.info "Publishing score #{score} to users score\n\n"
+						Rails.logger.debug "Publishing score #{score} to users score\n\n"
 						MessageBus.publish("/qplum_score/#{current_user.id}", score)
 					end
 					return response
@@ -147,11 +147,18 @@ after_initialize do
 	Notification.class_eval do
 		after_create do 
 			if self.notification_type == Notification.types[:granted_badge]
-				response = QplumApiPlugin::Requestor.post_event(self.user, "badge-granted", {})
+				badge_data = JSON.parse(self.data)
+				badge_id = badge_data["badge_id"]
+				badge_name = badge_data["badge_name"]
+				if badge_id
+					badge = Badge.includes(:badge_type).find(badge_id)
+					type = badge.badge_type.name
+				end
+				response = QplumApiPlugin::Requestor.post_event(self.user, "badge-granted", {"badge_id" => badge_id, "badge_name" => badge_name, "badge_type" => type})
 				if response && response.body 
 					body = JSON.parse(response.body)
 					if body && body.has_key?("score")
-						Rails.logger.info "After badge-granted , new score is #{body['score']}"						
+						Rails.logger.debug "After badge-granted , new score is #{body['score']}"
 						MessageBus.publish("/qplum_score/#{self.user.id}", body["score"])
 					end
 				end
