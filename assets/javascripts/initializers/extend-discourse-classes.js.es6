@@ -13,9 +13,9 @@ export default {
     });    
     var user = Discourse.User.current();
     if (user != null){
-      //Discourse.MessageBus.subscribe("/qplum_score/"+user.id, function(score) {
-      //    user.set('score', score);
-      //});
+      Discourse.MessageBus.subscribe("/qplum_score/"+user.id, function(score) {
+          user.set('score', score);
+      });
       Discourse.ajax("/qplum_api/score", {
           dataType: 'json',
           type: 'GET'

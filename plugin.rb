@@ -4,6 +4,7 @@
 # authors: codeon
 
 register_asset "javascripts/discourse/templates/user-dropdown.js.handlebars"
+register_asset "javascripts/discourse/templates/user-card.js.handlebars"
 register_asset "stylesheets/score.scss"
 
 load File.expand_path("../qplum_api.rb", __FILE__)
@@ -26,13 +27,24 @@ after_initialize do
 			include CurrentUser			
 
 			def get_score
-				response= Requestor.get_score(current_user)
+				user = current_user
+				uid = params[:id]
+				if uid.present?
+					user = User.find_by_id(uid)
+				end
+				unless user
+					render status: 404, json: :false
+					return 
+				end
+				response= Requestor.get_score(current_user, user)
 				unless response 
 					render status: :forbidden, json: :false
+					return 
 				else
 					respond_to do |format|				        
 				        format.json { render json: response.body }
 				    end
+				    return 
 				end				
 			end
 
@@ -40,10 +52,12 @@ after_initialize do
 				response= Requestor.post_event(current_user, params[:user_action], params[:metadata])
 				unless response 
 					render status: :forbidden, json: :false
+					return 
 				else
 					respond_to do |format|				        
 				        format.json { render json: response.body }
 				    end
+				    return
 				end
 			end			
 		end
@@ -66,11 +80,11 @@ after_initialize do
 				end
 			end
 
-			def self.get_score(current_user)
+			def self.get_score(current_user, score_for_user)
 				if current_user.nil?					
 					return 
 				else 	
-					external_id = current_user.single_sign_on_record.external_id
+					external_id = score_for_user.single_sign_on_record.external_id
 					url = "#{API_BASE_PATH}users/#{external_id}/score.json"
 					response = create_and_execute_get_request(current_user, url, {}, true)
 					if response.body 
@@ -78,7 +92,7 @@ after_initialize do
 						Rails.logger.info "Response body is #{body}\n\n"
 						score = body["score"]
 						Rails.logger.debug "Publishing score #{score} to users score\n\n"
-						MessageBus.publish("/qplum_score/#{current_user.id}", score)
+						MessageBus.publish("/qplum_score/#{score_for_user.id}", score)
 					end
 					return response
 				end
@@ -125,7 +139,7 @@ after_initialize do
 
 			def self.create_and_execute_post_request(current_user, url, params, add_access_token)
 				uri = URI.parse(url)
-				uri.query = URI.encode_www_form(params)
+				# uri.query = URI.encode_www_form(params)
 				http = Net::HTTP.new(uri.host, uri.port)
 				if uri.scheme == "https"
 					http.use_ssl = true
@@ -137,6 +151,7 @@ after_initialize do
 					end
 				end
 				request = Net::HTTP::Post.new(uri.request_uri)
+				request.set_form_data(params)
 				request = add_authentication_headers(current_user, request, add_access_token)
 				response = http.request(request)
 				return response
@@ -150,15 +165,16 @@ after_initialize do
 				badge_data = JSON.parse(self.data)
 				badge_id = badge_data["badge_id"]
 				badge_name = badge_data["badge_name"]
+				Rails.logger.info "Granted badge - #{badge_data}, #{badge_id} , #{badge_name}"
 				if badge_id
 					badge = Badge.includes(:badge_type).find(badge_id)
 					type = badge.badge_type.name
 					response = QplumApiPlugin::Requestor.post_event(self.user, 
 						"badge-granted", 
 						{
-							"badge_id" => badge_id, 
-							"badge_name" => badge_name, 
-							"badge_type" => type, 
+							"badge_id" => badge_id,
+							"badge_name" => badge_name,
+							"badge_type" => type,
 							"notif_id" => self.id,
 							"multiple" => badge.multiple_grant
 						}
@@ -177,6 +193,7 @@ after_initialize do
 
 	QplumApiPlugin::Engine.routes.draw do
 	    get '/score' => 'qplum_api#get_score'
+	    get '/score/:id' => 'qplum_api#get_score'
 	    post '/event' => 'qplum_api#post_event'
 	    # post '/add' => 'qplum_api#add'
   	end
