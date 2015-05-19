@@ -1,27 +1,31 @@
 export default {
   name: "extend-discourse-classes",
   initialize: function(container, application) {
-    Discourse.User.reopen({
+    var user = Discourse.User.current();
+    if (user != null){
+      user.set('score', 0);
+      MessageBus.subscribe('/qplum_score/' + user.id, function(score) {
+          user.set('score', score);
+      });
+      Discourse.ajax('/qplum_api/score', {
+        dataType: 'json',
+        type: 'GET'
+      }).then(function(json) {
+        user.set('score', json['score']);
+      });
+    }
+
+    /*Discourse.User.reopen({
       score: 0, 
       getScore: function() {
         var thisClass = this;
         return Discourse.ajax("/qplum_api/score", {
           dataType: 'json',
           type: 'GET'
-        });
-      }
-    });    
-    var user = Discourse.User.current();
-    if (user != null){
-      Discourse.MessageBus.subscribe("/qplum_score/"+user.id, function(score) {
-          user.set('score', score);
-      });
-      Discourse.ajax("/qplum_api/score", {
-          dataType: 'json',
-          type: 'GET'
-        }).then(function(json) {
+        }).then(function(json){
           user.set('score', json['score']);
         });
-    }
+      }
+    }); */
   }
 };

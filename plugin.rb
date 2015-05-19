@@ -26,26 +26,36 @@ after_initialize do
 		class QplumApiController < ::ApplicationController
 			include CurrentUser			
 
+			def update_score
+				MessageBus.publish('/qplum_score/1', rand(100..999))
+				return
+			end
+
 			def get_score
-				user = current_user
-				uid = params[:id]
-				if uid.present?
-					user = User.find_by_id(uid)
+				respond_to do |format|
+					msg = {:score => rand(100..999)}
+					format.json  { render :json => msg } # don't do msg.to_json
 				end
-				unless user
-					render status: 404, json: :false
-					return 
-				end
-				response= Requestor.get_score(current_user, user)
-				unless response 
-					render status: :forbidden, json: :false
-					return 
-				else
-					respond_to do |format|				        
-				        format.json { render json: response.body }
-				    end
-				    return 
-				end				
+				return
+				# user = current_user
+				# uid = params[:id]
+				# if uid.present?
+				# 	user = User.find_by_id(uid)
+				# end
+				# unless user
+				# 	render status: 404, json: :false
+				# 	return 
+				# end
+				# response= Requestor.get_score(current_user, user)
+				# unless response 
+				# 	render status: :forbidden, json: :false
+				# 	return 
+				# else
+				# 	respond_to do |format|				        
+				#         format.json { render json: response.body }
+				#     end
+				#     return 
+				# end				
 			end
 
 			def post_event
@@ -81,21 +91,26 @@ after_initialize do
 			end
 
 			def self.get_score(current_user, score_for_user)
-				if current_user.nil?					
-					return 
-				else 	
-					external_id = score_for_user.single_sign_on_record.external_id
-					url = "#{API_BASE_PATH}users/#{external_id}/score.json"
-					response = create_and_execute_get_request(current_user, url, {}, true)
-					if response.body 
-						body = JSON.parse(response.body)
-						Rails.logger.info "Response body is #{body}\n\n"
-						score = body["score"]
-						Rails.logger.debug "Publishing score #{score} to users score\n\n"
-						MessageBus.publish("/qplum_score/#{score_for_user.id}", score)
-					end
-					return response
+				respond_to do |format|
+					msg = {:score => rand(100..999)}
+					format.json  { render :json => msg } # don't do msg.to_json
 				end
+				return
+				# if current_user.nil?					
+				# 	return 
+				# else 	
+				# 	external_id = score_for_user.single_sign_on_record.external_id
+				# 	url = "#{API_BASE_PATH}users/#{external_id}/score.json"
+				# 	response = create_and_execute_get_request(current_user, url, {}, true)
+				# 	if response.body 
+				# 		body = JSON.parse(response.body)
+				# 		Rails.logger.info "Response body is #{body}\n\n"
+				# 		score = body["score"]
+				# 		Rails.logger.debug "Publishing score #{score} to users score\n\n"
+				# 		MessageBus.publish("/qplum_score/#{score_for_user.id}", score)
+				# 	end
+				# 	return response
+				# end
 			end
 
 			def self.add_authentication_headers(current_user, request, add_access_token)
@@ -193,7 +208,8 @@ after_initialize do
 
 	QplumApiPlugin::Engine.routes.draw do
 	    get '/score' => 'qplum_api#get_score'
-	    get '/score/:id' => 'qplum_api#get_score'
+	    get '/score/:id' => 'qplum_api#update_score'
+	    get '/updatescore' => 'qplum_api#get_score'
 	    post '/event' => 'qplum_api#post_event'
 	    # post '/add' => 'qplum_api#add'
   	end

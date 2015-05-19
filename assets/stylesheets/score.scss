@@ -1,13 +1,17 @@
 .qplum-score {
-	color : #9a5c79;
-	font-size : 16px;
-	line-height : 22px;
+	/*color : #9a5c79;*/
+	color: #0088cc;
+	display: block;
+  	padding: 5px;
+	font-size: 0.929em;
+  	line-height: 16px;
 }
 
 .qplum-score:hover {
-	color : #7d4861;
+	/*color : #7d4861;*/
+	color: #0088cc;
 }
 
 .qplum-score:active {
-	color : #7d4861;
+	color: #0088cc;
 }
