@@ -5,6 +5,7 @@
 
 register_asset "javascripts/discourse/templates/user-dropdown.js.handlebars"
 register_asset "javascripts/discourse/templates/user-card.js.handlebars"
+register_asset "javascripts/discourse/templates/user/user.js.handlebars"
 register_asset "stylesheets/score.scss"
 
 load File.expand_path("../qplum_api.rb", __FILE__)
@@ -209,7 +210,6 @@ after_initialize do
 	QplumApiPlugin::Engine.routes.draw do
 	    get '/score' => 'qplum_api#get_score'
 	    get '/score/:id' => 'qplum_api#update_score'
-	    get '/updatescore' => 'qplum_api#get_score'
 	    post '/event' => 'qplum_api#post_event'
 	    # post '/add' => 'qplum_api#add'
   	end
