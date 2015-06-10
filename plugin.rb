@@ -33,30 +33,30 @@ after_initialize do
 			end
 
 			def get_score
-				respond_to do |format|
-					msg = {:score => rand(100..999)}
-					format.json  { render :json => msg } # don't do msg.to_json
+				# respond_to do |format|
+				# 	msg = {:score => rand(100..999)}
+				# 	format.json  { render :json => msg } # don't do msg.to_json
+				# end
+				# return
+				user = current_user
+				uid = params[:id]
+				if uid.present?
+					user = User.find_by_id(uid)
 				end
-				return
-				# user = current_user
-				# uid = params[:id]
-				# if uid.present?
-				# 	user = User.find_by_id(uid)
-				# end
-				# unless user
-				# 	render status: 404, json: :false
-				# 	return 
-				# end
-				# response= Requestor.get_score(current_user, user)
-				# unless response 
-				# 	render status: :forbidden, json: :false
-				# 	return 
-				# else
-				# 	respond_to do |format|				        
-				#         format.json { render json: response.body }
-				#     end
-				#     return 
-				# end				
+				unless user
+					render status: 404, json: :false
+					return 
+				end
+				response= Requestor.get_score(current_user, user)
+				unless response 
+					render status: :forbidden, json: :false
+					return 
+				else
+					respond_to do |format|
+				        format.json { render json: response.body }
+				    end
+				    return 
+				end
 			end
 
 			def post_event
@@ -92,26 +92,26 @@ after_initialize do
 			end
 
 			def self.get_score(current_user, score_for_user)
-				respond_to do |format|
-					msg = {:score => rand(100..999)}
-					format.json  { render :json => msg } # don't do msg.to_json
-				end
-				return
-				# if current_user.nil?					
-				# 	return 
-				# else 	
-				# 	external_id = score_for_user.single_sign_on_record.external_id
-				# 	url = "#{API_BASE_PATH}users/#{external_id}/score.json"
-				# 	response = create_and_execute_get_request(current_user, url, {}, true)
-				# 	if response.body 
-				# 		body = JSON.parse(response.body)
-				# 		Rails.logger.info "Response body is #{body}\n\n"
-				# 		score = body["score"]
-				# 		Rails.logger.debug "Publishing score #{score} to users score\n\n"
-				# 		MessageBus.publish("/qplum_score/#{score_for_user.id}", score)
-				# 	end
-				# 	return response
+				# respond_to do |format|
+				# 	msg = {:score => rand(100..999)}
+				# 	format.json  { render :json => msg } # don't do msg.to_json
 				# end
+				# return
+				if current_user.nil?					
+					return 
+				else 	
+					external_id = score_for_user.single_sign_on_record.external_id
+					url = "#{API_BASE_PATH}users/#{external_id}/score.json"
+					response = create_and_execute_get_request(current_user, url, {}, true)
+					if response.body 
+						body = JSON.parse(response.body)
+						Rails.logger.info "Response body is #{body}\n\n"
+						score = body["score"]
+						Rails.logger.debug "Publishing score #{score} to users score\n\n"
+						MessageBus.publish("/qplum_score/#{score_for_user.id}", score)
+					end
+					return response
+				end
 			end
 
 			def self.add_authentication_headers(current_user, request, add_access_token)
