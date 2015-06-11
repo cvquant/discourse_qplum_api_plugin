@@ -14,18 +14,5 @@ export default {
         user.set('score', json['score']);
       });
     }
-
-    /*Discourse.User.reopen({
-      score: 0, 
-      getScore: function() {
-        var thisClass = this;
-        return Discourse.ajax("/qplum_api/score", {
-          dataType: 'json',
-          type: 'GET'
-        }).then(function(json){
-          user.set('score', json['score']);
-        });
-      }
-    }); */
   }
 };

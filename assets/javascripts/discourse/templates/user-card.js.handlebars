@@ -65,7 +65,7 @@
 
   {{#if showBadges}}
     <div class="badge-section">
-      <span class='qplum-score'>Score- {{score}}</span>
+      <span class='qplum-score'>Score- {{user.score}}</span>
       {{#each ub in user.featured_user_badges}}
         {{user-badge badge=ub.badge}}
       {{/each}}
