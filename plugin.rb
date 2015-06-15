@@ -28,7 +28,8 @@ after_initialize do
 			include CurrentUser			
 
 			def update_score
-				MessageBus.publish('/qplum_score/1', rand(100..999))
+				msg = {:score => rand(100..999)}
+				format.json  { render :json => msg } # don't do msg.to_json
 				return
 			end
 
@@ -209,7 +210,7 @@ after_initialize do
 
 	QplumApiPlugin::Engine.routes.draw do
 	    get '/score' => 'qplum_api#get_score'
-	    get '/score/:id' => 'qplum_api#update_score'
+	    get '/score/:id' => 'qplum_api#get_score'
 	    post '/event' => 'qplum_api#post_event'
 	    # post '/add' => 'qplum_api#add'
   	end
