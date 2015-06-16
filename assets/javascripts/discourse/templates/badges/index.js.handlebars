@@ -2,6 +2,13 @@
   <h1>{{i18n 'badges.title'}}</h1>
 
   <table class='badges-listing'>
+    <thead>
+      <th></th>
+      <th>Name</th>
+      <th class='description'>Description</th>
+      <th class='grant-count'>Granted</th>
+      <th class='grant-count'>Score</th>
+    </thead>
     <tbody>
       {{#each bg in badgeGroups}}
         <tr class='title'>
