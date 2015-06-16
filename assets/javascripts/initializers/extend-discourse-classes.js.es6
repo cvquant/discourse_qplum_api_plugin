@@ -1,6 +1,7 @@
 export default {
   name: "extend-discourse-classes",
   initialize: function(container, application) {
+  
     var user = Discourse.User.current();
     if (user != null){
       user.set('score', 0);
@@ -64,6 +65,61 @@ export default {
         }).finally(() => {
           this.set('userLoading', null);
         });
+      }
+    });
+
+    //overriding batch model updating batch score in model level
+
+    Discourse.Badge.reopenClass({
+      /**
+        Create `Discourse.Badge` instances from the server JSON response.
+        @method createFromJson
+        @param {Object} json The JSON returned by the server
+        @returns Array or instance of `Discourse.Badge` depending on the input JSON
+        @Overrided: for updating batch score
+      **/
+      createFromJson: function(json) {
+        // Create BadgeType objects.
+        var badgeTypes = {};
+        if ('badge_types' in json) {
+          json.badge_types.forEach(function(badgeTypeJson) {
+            badgeTypes[badgeTypeJson.id] = Ember.Object.create(badgeTypeJson);
+          });
+        }
+
+        var badgeGroupings = {};
+        if ('badge_groupings' in json) {
+          json.badge_groupings.forEach(function(badgeGroupingJson) {
+            badgeGroupings[badgeGroupingJson.id] = Discourse.BadgeGrouping.create(badgeGroupingJson);
+          });
+        }
+
+        // Create Badge objects.
+        var badges = [];
+        if ("badge" in json) {
+          badges = [json.badge];
+        } else {
+          badges = json.badges;
+        }
+        badges = badges.map(function(badgeJson) {
+          var badge = Discourse.Badge.create(badgeJson);
+          if(badgeTypes[badge.badge_type_id] && badgeTypes[badge.badge_type_id].name.toLowerCase() === 'gold') {
+            badge.set('score', 250);
+          } else if(badgeTypes[badge.badge_type_id] && badgeTypes[badge.badge_type_id].name.toLowerCase() === 'silver') {
+            badge.set('score', 100);
+          } else if(badgeTypes[badge.badge_type_id] && badgeTypes[badge.badge_type_id].name.toLowerCase() === 'bronze') {
+            badge.set('score', 10);
+          }
+          badge.set('badge_type', badgeTypes[badge.get('badge_type_id')]);
+          badge.set('badge_grouping', badgeGroupings[badge.get('badge_grouping_id')]);
+          return badge;
+        });
+
+        if ("badge" in json) {
+          return badges[0];
+        } else {
+          return badges;
+        }
       }
     });
   }

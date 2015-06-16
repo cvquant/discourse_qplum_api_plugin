@@ -6,6 +6,7 @@
 register_asset "javascripts/discourse/templates/user-dropdown.js.handlebars"
 register_asset "javascripts/discourse/templates/user-card.js.handlebars"
 register_asset "javascripts/discourse/templates/user/user.js.handlebars"
+register_asset "javascripts/discourse/templates/badges/index.js.handlebars"
 register_asset "stylesheets/score.scss"
 
 load File.expand_path("../qplum_api.rb", __FILE__)
