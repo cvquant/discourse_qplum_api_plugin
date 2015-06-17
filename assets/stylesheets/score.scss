@@ -19,3 +19,24 @@
 .badges-listing th {
 	text-align: left;
 }
+
+.logo-text {
+	font-family: 'Quicksand', sans-serif;
+	font-size: 42px;
+ 	line-height: 35px;
+}
+.qp-purple {
+	color: #9a5c79;
+}
+.qp-green {
+	color: #07c1a7;
+}
+#account-buttons {
+	padding: 18px 0 18px 0;
+}
+
+.list-inline > li {
+	display: inline-block;
+	padding-right: 5px;
+	padding-left: 5px;
+}
