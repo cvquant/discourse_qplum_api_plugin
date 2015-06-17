@@ -1,3 +1,4 @@
+
 .qplum-score {
 	/*color : #9a5c79;*/
 	color: #0088cc;
@@ -31,12 +32,10 @@
 .qp-green {
 	color: #07c1a7;
 }
-#account-buttons {
-	padding: 18px 0 18px 0;
+.sign-in {
+	background-color: #9a5c79 !important;
+	padding: 6px 20px !important
 }
-
-.list-inline > li {
-	display: inline-block;
-	padding-right: 5px;
-	padding-left: 5px;
+.header-icon {
+	color: #9a5c79 !important;
 }

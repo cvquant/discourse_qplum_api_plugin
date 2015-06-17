@@ -1,11 +1,11 @@
+<link href='//fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />
+<link href='https://fonts.googleapis.com/css?family=Quicksand' rel='stylesheet' type='text/css'/>
 <div class='container'>
   <div class='contents clearfix'>
 
     <div id="ember1268" class="ember-view title">
-        
-          <span class="logo-text qp-purple">q</span>
-          <span class="logo-text qp-green">plum</span>
-        
+      <span class="logo-text qp-purple">q</span>
+      <span class="logo-text qp-green">plum</span>
     </div>
 
     <div class='panel clearfix'>
@@ -13,7 +13,7 @@
         {{#if showSignUpButton}}
           {{d-button action="showCreateAccount" class="btn-primary btn-small sign-up-button" label="sign_up"}}
         {{/if}}
-        {{d-button action="showLogin" class="btn-primary btn-small login-button" icon="user" label="log_in"}}
+        {{d-button action="showLogin" class="btn-primary btn-medium login-button sign-in" label="log_in"}}
       {{/unless}}
       <ul class='icons clearfix' role='navigation'>
         {{#if currentUser}}
@@ -31,12 +31,12 @@
         {{/if}}
         <li>
           {{#if loginRequired}}
-            <a id='search-button' class='icon expand' href='#' aria-hidden="true" {{action "showLogin"}}>
+            <a id='search-button' class='icon expand header-icon' href='#' aria-hidden="true" {{action "showLogin"}}>
               {{fa-icon "search"}}
             </a>
           {{else}}
             <a id='search-button'
-               class='icon expand'
+               class='icon expand header-icon'
                href='#'
                data-dropdown="search-dropdown"
                title='{{i18n 'search.title'}}'>
@@ -46,7 +46,7 @@
         </li>
         <li class='categories dropdown'>
           {{#if loginRequired}}
-            <a class='icon'
+            <a class='icon header-icon'
                href="#"
                aria-hidden="true"
                id="site-map"
@@ -54,7 +54,7 @@
                {{fa-icon "bars"}}
             </a>
           {{else}}
-            <a class='icon'
+            <a class='icon header-icon'
                data-dropdown="site-map-dropdown"
                data-render="renderSiteMap"
                href
