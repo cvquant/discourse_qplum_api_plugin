@@ -3,7 +3,7 @@
 # version: 0.1
 # authors: codeon
 
-register_asset "javascripts/discourse/templates/header.js.handlebars"
+#register_asset "javascripts/discourse/templates/header.js.handlebars"
 register_asset "javascripts/discourse/templates/user-dropdown.js.handlebars"
 register_asset "javascripts/discourse/templates/user-card.js.handlebars"
 register_asset "javascripts/discourse/templates/user/user.js.handlebars"
